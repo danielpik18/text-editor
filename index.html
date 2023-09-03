@@ -47,6 +47,7 @@
                 const selection = window.getSelection();
                 console.log(selection);
 
+                /*
                 if (!selection.isCollapsed) {
                     // Create a <span> element to wrap the selected text
                     let span = document.createElement("span");
@@ -55,13 +56,15 @@
 
                     // Surround the selected text with the <span> element
                     selection.getRangeAt(0).surroundContents(span);
-                }
+                }*/
 
                 if (!selection.isCollapsed && selection.rangeCount > 0) {
                     const range = selection.getRangeAt(0);
                     const startContainer = range.startContainer;
                     const endContainer = range.endContainer;
                     const commonAncestor = range.commonAncestorContainer;
+
+                    console.log(range);
 
                     function collectTextNodes(node, start, end) {
                         if (node.nodeType === Node.TEXT_NODE) {
@@ -198,10 +201,11 @@
                 // Get the current caret position within the target text element
                 const selection = window.getSelection();
                 const range = selection.getRangeAt(0);
-                const caretOffset = range.startOffset;
+                const caretStartOffset = range.startOffset;
+                const caretEndOffset = range.endOffset;
 
                 // Check if the caret is at the beginning of the text element
-                if (caretOffset === 0) {
+                if (caretStartOffset === 0) {
                     console.log("caret at the beggining.");
                     return;
                 }
@@ -209,28 +213,55 @@
                 // Create two new text nodes for the text before and after the caret
                 const commonAncestor = range.commonAncestorContainer;
 
-                const textBeforeCaret = commonAncestor.textContent.substring(
-                    0,
-                    caretOffset
-                );
-                const textAfterCaret =
-                    commonAncestor.textContent.substring(caretOffset);
+                if (selection.isCollapsed) {
+                    const textBeforeCaret =
+                        commonAncestor.textContent.substring(
+                            0,
+                            caretStartOffset
+                        );
+                    const textAfterCaret =
+                        commonAncestor.textContent.substring(caretStartOffset);
 
-                console.log(commonAncestor.parentNode);
+                    console.log(commonAncestor.parentNode);
 
-                // Set the text content of the original text element to the text before the caret
-                commonAncestor.textContent = textBeforeCaret;
+                    // Set the text content of the original text element to the text before the caret
+                    commonAncestor.textContent = textBeforeCaret;
 
-                // Create a new text node for the text after the caret
-                const newTextElement = document.createElement("DIV");
-                newTextElement.className = "text-item";
-                newTextElement.textContent = textAfterCaret;
+                    // Create a new text node for the text after the caret
+                    const newTextElement = document.createElement("DIV");
+                    newTextElement.className = "text-item";
+                    newTextElement.textContent = textAfterCaret;
 
-                // Insert the new text node after the original text element
-                commonAncestor.parentNode.insertAdjacentElement(
-                    "afterend",
-                    newTextElement
-                );
+                    // Insert the new text node after the original text element
+                    commonAncestor.parentNode.insertAdjacentElement(
+                        "afterend",
+                        newTextElement
+                    );
+                } else {
+                    const textBeforeCaret =
+                        commonAncestor.textContent.substring(
+                            0,
+                            caretStartOffset
+                        );
+                    const textAfterCaret =
+                        commonAncestor.textContent.substring(caretEndOffset);
+
+                    // Set the text content of the original text element to the text before the caret
+                    commonAncestor.textContent = textBeforeCaret;
+
+                    // Create a new text node for the text after the caret
+                    const newTextElement = document.createElement("DIV");
+                    newTextElement.className = "text-item";
+                    newTextElement.textContent = textAfterCaret;
+
+                    // Insert the new text node after the original text element
+                    commonAncestor.parentNode.insertAdjacentElement(
+                        "afterend",
+                        newTextElement
+                    );
+
+                    console.log(textAfterCaret);
+                }
             }
 
             // Example usage:
