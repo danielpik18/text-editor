@@ -12,6 +12,8 @@
                 padding: 20px;
                 max-width: 600px;
                 margin-bottom: 20px;
+                font-family: Arial, Helvetica, sans-serif;
+                line-height: 24px;
             }
             #split-button {
                 font-size: 20px;
@@ -22,20 +24,19 @@
                 background-color: blue;
                 color: white; /* Optional: Change text color for better visibility */
             }
+            .text-item {
+                margin: 10px 0;
+            }
         </style>
     </head>
     <body>
         <div id="text-editor" contenteditable="true">
-            <p>
-                This is some text you can select.
-                <strong
-                    >Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                    Consequuntur ab ipsum sunt, impedit consequatur neque, quos
-                    repellat excepturi eaque culpa aut? Voluptas inventore
-                    similique voluptatem non, asperiores deleniti? Iste,
-                    corrupti!</strong
-                >
-            </p>
+            <div class="text-item">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                Adipisci aliquam officiis non dicta. Alias, quaerat eaque?
+                Minima voluptas hic distinctio doloremque tempore architecto
+                laboriosam recusandae dolorem libero possimus. Ab, sit!
+            </div>
         </div>
         <button id="split-button">Split</button>
 
@@ -45,6 +46,16 @@
             function getNodesInSelection() {
                 const selection = window.getSelection();
                 console.log(selection);
+
+                if (!selection.isCollapsed) {
+                    // Create a <span> element to wrap the selected text
+                    let span = document.createElement("span");
+                    span.style.backgroundColor = "yellow"; // Set the background color
+                    span.className = "highlighted-text"; // You can style this class in your CSS
+
+                    // Surround the selected text with the <span> element
+                    selection.getRangeAt(0).surroundContents(span);
+                }
 
                 if (!selection.isCollapsed && selection.rangeCount > 0) {
                     const range = selection.getRangeAt(0);
@@ -183,18 +194,57 @@
                 selectedNodes.length = 0;
             }
 
+            function splitTextAfterCaret() {
+                // Get the current caret position within the target text element
+                const selection = window.getSelection();
+                const range = selection.getRangeAt(0);
+                const caretOffset = range.startOffset;
+
+                // Check if the caret is at the beginning of the text element
+                if (caretOffset === 0) {
+                    console.log("caret at the beggining.");
+                    return;
+                }
+
+                // Create two new text nodes for the text before and after the caret
+                const commonAncestor = range.commonAncestorContainer;
+
+                const textBeforeCaret = commonAncestor.textContent.substring(
+                    0,
+                    caretOffset
+                );
+                const textAfterCaret =
+                    commonAncestor.textContent.substring(caretOffset);
+
+                console.log(commonAncestor.parentNode);
+
+                // Set the text content of the original text element to the text before the caret
+                commonAncestor.textContent = textBeforeCaret;
+
+                // Create a new text node for the text after the caret
+                const newTextElement = document.createElement("DIV");
+                newTextElement.className = "text-item";
+                newTextElement.textContent = textAfterCaret;
+
+                // Insert the new text node after the original text element
+                commonAncestor.parentNode.insertAdjacentElement(
+                    "afterend",
+                    newTextElement
+                );
+            }
+
             // Example usage:
             document
                 .getElementById("text-editor")
                 .addEventListener("mouseup", () => {
                     // Example usage:
                     const selectedNodes = getNodesInSelection();
-                    console.log("Selected Nodes:", selectedNodes);
+                    //console.log("Selected Nodes:", selectedNodes);
                 });
 
             document
                 .querySelector("#split-button")
-                .addEventListener("click", splitSelectedText);
+                .addEventListener("click", splitTextAfterCaret);
         </script>
     </body>
 </html>
