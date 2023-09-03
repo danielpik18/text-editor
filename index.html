@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Leet code</title>
+
+        <style>
+            #text-editor {
+                background: antiquewhite;
+                min-height: 300px;
+                padding: 20px;
+                max-width: 600px;
+                margin-bottom: 20px;
+            }
+            #split-button {
+                font-size: 20px;
+                text-transform: uppercase;
+                cursor: pointer;
+            }
+            .selected {
+                background-color: blue;
+                color: white; /* Optional: Change text color for better visibility */
+            }
+        </style>
+    </head>
+    <body>
+        <div id="text-editor" contenteditable="true">
+            <p>
+                This is some text you can select.
+                <strong
+                    >Lorem, ipsum dolor sit amet consectetur adipisicing elit.
+                    Consequuntur ab ipsum sunt, impedit consequatur neque, quos
+                    repellat excepturi eaque culpa aut? Voluptas inventore
+                    similique voluptatem non, asperiores deleniti? Iste,
+                    corrupti!</strong
+                >
+            </p>
+        </div>
+        <button id="split-button">Split</button>
+
+        <script>
+            const selectedNodes = [];
+
+            function getNodesInSelection() {
+                const selection = window.getSelection();
+                console.log(selection);
+
+                if (!selection.isCollapsed && selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const startContainer = range.startContainer;
+                    const endContainer = range.endContainer;
+                    const commonAncestor = range.commonAncestorContainer;
+
+                    function collectTextNodes(node, start, end) {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            const text = node.textContent;
+                            const startOffset =
+                                node === startContainer ? start : 0;
+                            const endOffset =
+                                node === endContainer ? end : text.length;
+                            const type =
+                                node.parentNode.nodeName === "P"
+                                    ? "#text"
+                                    : node.parentNode.nodeName;
+
+                            if (endOffset > startOffset) {
+                                selectedNodes.push({
+                                    type: type,
+                                    content: text.substring(
+                                        startOffset,
+                                        endOffset
+                                    ),
+                                    startOffset,
+                                    endOffset,
+                                });
+                            }
+                        }
+                    }
+
+                    const treeWalker = document.createTreeWalker(
+                        commonAncestor,
+                        NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT
+                    );
+
+                    // Flag to track if any text nodes have been found
+                    let foundTextNodes = false;
+
+                    while (treeWalker.nextNode()) {
+                        const currentNode = treeWalker.currentNode;
+
+                        if (range.intersectsNode(currentNode)) {
+                            if (currentNode.nodeType === Node.TEXT_NODE) {
+                                collectTextNodes(
+                                    currentNode,
+                                    range.startOffset,
+                                    range.endOffset
+                                );
+                                foundTextNodes = true;
+                            }
+                        }
+                    }
+
+                    // If no text nodes were found in the selection, capture the entire selection as plain text
+                    if (!foundTextNodes) {
+                        collectTextNodes(
+                            commonAncestor,
+                            range.startOffset,
+                            range.endOffset
+                        );
+                    }
+                } else {
+                    selectedNodes.length = 0;
+                }
+
+                return selectedNodes;
+            }
+
+            function splitSelectedText() {
+                const selection = window.getSelection();
+                if (selection.rangeCount === 0 || selectedNodes.length === 0) {
+                    // No selection or no saved nodes, nothing to split.
+                    return;
+                }
+
+                const range = selection.getRangeAt(0);
+
+                const startOffset = range.startOffset;
+                const endOffset = range.endOffset;
+
+                // Create a new <p> element.
+                const newParagraph = document.createElement("p");
+
+                for (const node of selectedNodes) {
+                    const type = node.type;
+                    const content = node.content;
+
+                    if (type === "#text") {
+                        newParagraph.appendChild(
+                            document.createTextNode(content)
+                        );
+                    } else {
+                        const element = document.createElement(type);
+                        element.textContent = content;
+                        newParagraph.appendChild(element);
+                    }
+
+                    // Get the original paragraph element.
+                    const commonAncestor = range.commonAncestorContainer;
+
+                    // If ONLY one element type was selected
+                    if (commonAncestor.nodeType === Node.TEXT_NODE) {
+                        // Selection common ancestor is plain text
+                        const originalText = commonAncestor.textContent;
+                        const newText = originalText.replace(content, "");
+                        commonAncestor.textContent = newText;
+
+                        console.log(originalText, newText);
+                    } else {
+                        // If selection contaisn multple types of elements
+                        for (let childNode of commonAncestor.childNodes) {
+                            console.log(
+                                childNode.nodeName,
+                                node.type,
+                                childNode.textContent.includes(content)
+                            );
+
+                            if (childNode.nodeName === node.type) {
+                                childNode.textContent =
+                                    childNode.textContent.replace(content, "");
+                            }
+                        }
+                    }
+                }
+
+                // Insert the new paragraph after the original paragraph.
+                document
+                    .querySelector("#text-editor")
+                    .insertAdjacentElement("beforeend", newParagraph);
+
+                document.getSelection().empty();
+                selectedNodes.length = 0;
+            }
+
+            // Example usage:
+            document
+                .getElementById("text-editor")
+                .addEventListener("mouseup", () => {
+                    // Example usage:
+                    const selectedNodes = getNodesInSelection();
+                    console.log("Selected Nodes:", selectedNodes);
+                });
+
+            document
+                .querySelector("#split-button")
+                .addEventListener("click", splitSelectedText);
+        </script>
+    </body>
+</html>
