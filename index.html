@@ -66,6 +66,7 @@
 
                             if (endOffset > startOffset) {
                                 selectedNodes.push({
+                                    nodeRef: node,
                                     type: type,
                                     content: text.substring(
                                         startOffset,
@@ -131,7 +132,7 @@
 
                 const range = selection.getRangeAt(0);
 
-                console.log("range:", range);
+                //console.log("range:", range);
 
                 const startOffset = range.startOffset;
                 const endOffset = range.endOffset;
@@ -157,22 +158,14 @@
                     const commonAncestor = range.commonAncestorContainer;
 
                     // If ONLY one element type was selected
-                    if (commonAncestor.nodeType === Node.TEXT_NODE) {
+                    if (node.nodeRef.nodeType === Node.TEXT_NODE) {
                         // Selection common ancestor is plain text
-                        const originalText = commonAncestor.textContent;
+                        const originalText = node.nodeRef.textContent;
                         const newText = originalText.replace(content, "");
-                        commonAncestor.textContent = newText;
-
-                        console.log(originalText, newText);
+                        node.nodeRef.textContent = newText;
                     } else {
                         // If selection contaisn multple types of elements
-                        for (let childNode of commonAncestor.childNodes) {
-                            console.log(
-                                childNode.nodeName,
-                                node.type,
-                                childNode.textContent.includes(content)
-                            );
-
+                        for (let childNode of node.nodeRef.childNodes) {
                             if (childNode.nodeName === node.type) {
                                 childNode.textContent =
                                     childNode.textContent.replace(content, "");
